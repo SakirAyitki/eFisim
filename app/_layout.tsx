@@ -1,39 +1,71 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { PaperProvider, MD3LightTheme as DefaultTheme } from 'react-native-paper';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+// Mavi tonlarında renk paleti
+const theme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: '#2563EB', // Ana mavi
+    secondary: '#0EA5E9', // Açık mavi
+    background: '#F0F9FF', // Buz mavisi
+    surface: '#FFFFFF',
+    onSurface: '#1E3A8A', // Koyu lacivert
+    onBackground: '#3B82F6', // Parlak mavi
+    accent: '#38BDF8', // Sky mavi
+    elevation: {
+      level2: 'rgba(37, 99, 235, 0.08)',
+    },
+  },
+};
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
+    <PaperProvider theme={theme}>
+      <Stack
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: theme.colors.primary,
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: '600',
+          },
+          headerShadowVisible: false,
+          headerTitleAlign: 'center',
+          animation: 'slide_from_right',
+          contentStyle: {
+            backgroundColor: theme.colors.background,
+          },
+        }}
+      >
+        <Stack.Screen 
+          name="index" 
+          options={{ 
+            title: 'eFişim',
+            headerLargeTitle: true,
+            headerTitleStyle: {
+              fontSize: 24,
+              fontWeight: '700',
+            },
+          }} 
+        />
+        <Stack.Screen 
+          name="scanner" 
+          options={{ 
+            title: 'QR Kod Tara',
+            presentation: 'modal',
+            animation: 'slide_from_bottom',
+          }}
+        />
+        <Stack.Screen 
+          name="receipt/[id]" 
+          options={{ 
+            title: 'Fiş Detayı',
+            headerBackTitle: '',
+          }}
+        />
       </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    </PaperProvider>
   );
-}
+} 
