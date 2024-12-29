@@ -23,11 +23,23 @@ export default function Scanner() {
 
       let parsedData;
       try {
-        parsedData = JSON.parse(data);
+        // Veriyi temizle ve parse et
+        const cleanData = data.trim().replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+        console.log('Temizlenmiş veri:', cleanData);
+        
+        parsedData = JSON.parse(cleanData);
         console.log('JSON parse başarılı:', parsedData);
       } catch (error) {
         console.error('JSON parse hatası:', error);
-        throw new Error('Fiş verisi okunamadı');
+        // Alternatif parse denemesi
+        try {
+          const altData = data.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+          parsedData = JSON.parse(altData);
+          console.log('Alternatif parse başarılı');
+        } catch (parseError) {
+          console.error('Alternatif parse hatası:', parseError);
+          throw new Error('Fiş verisi okunamadı');
+        }
       }
 
       // Gerekli alanların varlığını kontrol et
