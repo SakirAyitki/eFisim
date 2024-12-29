@@ -14,37 +14,49 @@ export default function Scanner() {
     try {
       setScanned(true);
       console.log('QR Kod içeriği:', data);
+      console.log('QR Kod içeriği türü:', typeof data);
 
       // QR kod içeriğini kontrol et
       if (!data) {
         throw new Error('QR kod boş');
       }
 
-      const receiptData = JSON.parse(data);
-      console.log('Parse edilmiş veri:', receiptData);
+      let parsedData;
+      try {
+        parsedData = JSON.parse(data);
+        console.log('JSON parse başarılı:', parsedData);
+      } catch (error) {
+        console.error('JSON parse hatası:', error);
+        throw new Error('Fiş verisi okunamadı');
+      }
 
       // Gerekli alanların varlığını kontrol et
-      if (!receiptData.storeName || !receiptData.date || !receiptData.total || !receiptData.items) {
+      if (!parsedData.storeName || !parsedData.date || !parsedData.total || !parsedData.items) {
         throw new Error('Geçersiz fiş formatı');
       }
 
-      const existingReceiptsJson = await AsyncStorage.getItem('receipts');
-      const existingReceipts = existingReceiptsJson ? JSON.parse(existingReceiptsJson) : [];
-      
-      const newReceipt = {
-        id: Date.now().toString(),
-        ...receiptData
-      };
+      try {
+        const existingReceiptsJson = await AsyncStorage.getItem('receipts');
+        const existingReceipts = existingReceiptsJson ? JSON.parse(existingReceiptsJson) : [];
+        
+        const newReceipt = {
+          id: Date.now().toString(),
+          ...parsedData
+        };
 
-      const updatedReceipts = [...existingReceipts, newReceipt];
-      
-      await AsyncStorage.setItem('receipts', JSON.stringify(updatedReceipts));
-      console.log('Fiş başarıyla kaydedildi:', newReceipt);
+        const updatedReceipts = [...existingReceipts, newReceipt];
+        
+        await AsyncStorage.setItem('receipts', JSON.stringify(updatedReceipts));
+        console.log('Fiş başarıyla kaydedildi:', newReceipt);
 
-      // Kısa bir gecikme ekle
-      setTimeout(() => {
-        router.back();
-      }, 1000);
+        // Kısa bir gecikme ekle
+        setTimeout(() => {
+          router.back();
+        }, 1000);
+      } catch (storageError) {
+        console.error('Depolama hatası:', storageError);
+        throw new Error('Fiş kaydedilemedi');
+      }
 
     } catch (error) {
       console.error('QR kod işlenirken hata:', error);

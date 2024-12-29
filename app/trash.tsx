@@ -1,5 +1,5 @@
 import { View, FlatList, StyleSheet, Alert } from 'react-native';
-import { Text, FAB, Card, Surface, Avatar, useTheme, IconButton } from 'react-native-paper';
+import { Text, Card, Surface, Avatar, useTheme, IconButton } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useState, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -19,14 +19,14 @@ interface Receipt {
   }>;
 }
 
-export default function Home() {
+export default function Trash() {
   const router = useRouter();
   const theme = useTheme();
-  const [receipts, setReceipts] = useState<Receipt[]>([]);
+  const [deletedReceipts, setDeletedReceipts] = useState<Receipt[]>([]);
 
-  const loadReceipts = useCallback(async () => {
+  const loadDeletedReceipts = useCallback(async () => {
     try {
-      const savedReceipts = await AsyncStorage.getItem('receipts');
+      const savedReceipts = await AsyncStorage.getItem('deletedReceipts');
       if (savedReceipts) {
         let parsedData;
         try {
@@ -35,24 +35,24 @@ export default function Home() {
         } catch (parseError) {
           parsedData = JSON.parse(savedReceipts);
         }
-        setReceipts(parsedData);
+        setDeletedReceipts(parsedData);
       }
     } catch (error) {
-      console.error('Fişler yüklenirken hata:', error);
+      console.error('Silinen fişler yüklenirken hata:', error);
     }
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      loadReceipts();
-    }, [loadReceipts])
+      loadDeletedReceipts();
+    }, [loadDeletedReceipts])
   );
 
-  const deleteReceipt = async (id: string) => {
+  const permanentlyDeleteReceipt = async (id: string) => {
     try {
       Alert.alert(
-        "Fiş Sil",
-        "Bu fişi silmek istediğinize emin misiniz?",
+        "Kalıcı Olarak Sil",
+        "Bu fişi kalıcı olarak silmek istediğinize emin misiniz?",
         [
           {
             text: "İptal",
@@ -61,38 +61,9 @@ export default function Home() {
           {
             text: "Sil",
             onPress: async () => {
-              const savedReceipts = await AsyncStorage.getItem('receipts');
-              if (savedReceipts) {
-                let receiptsArray: Receipt[];
-                try {
-                  const decodedData = decodeURIComponent(savedReceipts);
-                  receiptsArray = JSON.parse(decodedData);
-                } catch (parseError) {
-                  receiptsArray = JSON.parse(savedReceipts);
-                }
-
-                const receiptToDelete = receiptsArray.find(r => r.id === id);
-                const updatedReceipts = receiptsArray.filter(r => r.id !== id);
-                
-                // Fişi çöp kutusuna taşı
-                if (receiptToDelete) {
-                  const deletedReceipts = await AsyncStorage.getItem('deletedReceipts');
-                  let deletedReceiptsArray = [];
-                  if (deletedReceipts) {
-                    try {
-                      const decodedData = decodeURIComponent(deletedReceipts);
-                      deletedReceiptsArray = JSON.parse(decodedData);
-                    } catch (parseError) {
-                      deletedReceiptsArray = JSON.parse(deletedReceipts);
-                    }
-                  }
-                  deletedReceiptsArray.push(receiptToDelete);
-                  await AsyncStorage.setItem('deletedReceipts', JSON.stringify(deletedReceiptsArray));
-                }
-                
-                await AsyncStorage.setItem('receipts', JSON.stringify(updatedReceipts));
-                setReceipts(updatedReceipts);
-              }
+              const updatedReceipts = deletedReceipts.filter(r => r.id !== id);
+              await AsyncStorage.setItem('deletedReceipts', JSON.stringify(updatedReceipts));
+              setDeletedReceipts(updatedReceipts);
             },
             style: "destructive"
           }
@@ -104,9 +75,40 @@ export default function Home() {
     }
   };
 
+  const restoreReceipt = async (receipt: Receipt) => {
+    try {
+      // Mevcut fişleri al
+      const savedReceipts = await AsyncStorage.getItem('receipts');
+      let receiptsArray: Receipt[] = [];
+      
+      if (savedReceipts) {
+        try {
+          const decodedData = decodeURIComponent(savedReceipts);
+          receiptsArray = JSON.parse(decodedData);
+        } catch (parseError) {
+          receiptsArray = JSON.parse(savedReceipts);
+        }
+      }
+      
+      // Fişi geri yükle
+      receiptsArray.push(receipt);
+      await AsyncStorage.setItem('receipts', JSON.stringify(receiptsArray));
+
+      // Silinen fişlerden kaldır
+      const updatedDeletedReceipts = deletedReceipts.filter(r => r.id !== receipt.id);
+      await AsyncStorage.setItem('deletedReceipts', JSON.stringify(updatedDeletedReceipts));
+      setDeletedReceipts(updatedDeletedReceipts);
+
+      Alert.alert('Başarılı', 'Fiş başarıyla geri yüklendi.');
+    } catch (error) {
+      console.error('Fiş geri yüklenirken hata:', error);
+      Alert.alert('Hata', 'Fiş geri yüklenirken bir hata oluştu.');
+    }
+  };
+
   const renderReceiptCard = ({ item }: { item: Receipt }) => (
     <Surface style={styles.surface} elevation={2}>
-      <Card style={styles.card} onPress={() => router.push(`/receipt/${item.id}`)}>
+      <Card style={styles.card}>
         <Card.Content>
           <View style={styles.cardHeader}>
             <Avatar.Icon 
@@ -120,15 +122,18 @@ export default function Home() {
               </Text>
               <Text variant="bodySmall" style={styles.cardDetail}>{item.date} {item.time}</Text>
             </View>
-            <IconButton
-              icon="delete"
-              iconColor={theme.colors.error}
-              onPress={(e) => {
-                e.stopPropagation();
-                deleteReceipt(item.id);
-              }}
-              style={styles.deleteButton}
-            />
+            <View style={styles.actionButtons}>
+              <IconButton
+                icon="restore"
+                iconColor={theme.colors.primary}
+                onPress={() => restoreReceipt(item)}
+              />
+              <IconButton
+                icon="delete-forever"
+                iconColor={theme.colors.error}
+                onPress={() => permanentlyDeleteReceipt(item.id)}
+              />
+            </View>
           </View>
 
           <View style={[styles.cardBody, { backgroundColor: theme.colors.background }]}>
@@ -160,48 +165,28 @@ export default function Home() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {receipts.length === 0 ? (
+      {deletedReceipts.length === 0 ? (
         <View style={styles.emptyState}>
           <Avatar.Icon 
             size={80} 
-            icon="receipt" 
+            icon="delete-empty" 
             style={{ backgroundColor: theme.colors.primary, marginBottom: 20 }}
           />
           <Text variant="headlineSmall" style={[styles.emptyTitle, { color: theme.colors.onSurface }]}>
-            Henüz hiç fişiniz yok
+            Çöp Kutusu Boş
           </Text>
           <Text variant="bodyMedium" style={styles.emptySubtitle}>
-            QR kod okutarak fiş ekleyebilirsiniz
+            Silinen fişler burada görüntülenecek
           </Text>
         </View>
       ) : (
         <FlatList
-          data={receipts}
+          data={deletedReceipts}
           renderItem={renderReceiptCard}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
         />
       )}
-      <View style={styles.fabContainer}>
-        <View style={styles.leftFab}>
-          <FAB
-            icon="delete"
-            label="Çöp Kutusu"
-            style={[styles.fab, { backgroundColor: theme.colors.error }]}
-            onPress={() => router.push('/trash')}
-            color="white"
-          />
-        </View>
-        <View style={styles.rightFab}>
-          <FAB
-            icon="qrcode-scan"
-            label="Fiş Tara"
-            style={[styles.fab, { backgroundColor: theme.colors.primary }]}
-            onPress={() => router.push('/scanner')}
-            color="white"
-          />
-        </View>
-      </View>
     </View>
   );
 }
@@ -243,6 +228,9 @@ const styles = StyleSheet.create({
   headerText: {
     marginLeft: 12,
     flex: 1,
+  },
+  actionButtons: {
+    flexDirection: 'row',
   },
   storeName: {
     fontWeight: '600',
@@ -291,25 +279,5 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'right',
     marginTop: 4,
-  },
-  fabContainer: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  leftFab: {
-    alignSelf: 'flex-start',
-  },
-  rightFab: {
-    alignSelf: 'flex-end',
-  },
-  fab: {
-    borderRadius: 28,
-  },
-  deleteButton: {
-    marginLeft: 8,
   },
 }); 
