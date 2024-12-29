@@ -7,16 +7,55 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 interface Receipt {
   id: string;
   storeName: string;
+  storeAddress: string;
+  vdbNo: string;
+  receiptType: string;
+  receiptNo: string;
   date: string;
   time: string;
-  total: number;
-  fiscalId: string;
-  paymentMethod: 'cash' | 'card';
+  ettn: string;
+  faturaNo: string;
+  customer?: {
+    vkn: string;
+    name: string;
+    address: string;
+    email: string;
+  };
   items: Array<{
     name: string;
     quantity: number;
     price: number;
+    taxRate: number;
   }>;
+  payment: {
+    type: 'cash' | 'card';
+    bank?: string;
+    cardInfo?: {
+      number: string;
+      installment: string;
+      installmentAmount: string;
+      approvalCode: string;
+      refNo: string;
+      provisionNo: string;
+      batchNo: string;
+      terminalId: string;
+    };
+  };
+  totals: {
+    subtotal: number;
+    kdv: number;
+    total: number;
+  };
+  footer: {
+    zNo: string;
+    ekuNo: string;
+    posInfo: string;
+    storeCode: string;
+    barcode: string;
+    irsaliyeText: string;
+    signatureText: string;
+    thankYouMessage: string;
+  };
 }
 
 export default function Trash() {
@@ -140,7 +179,7 @@ export default function Trash() {
             <View style={styles.infoRow}>
               <Text variant="bodySmall" style={styles.label}>Fiş No</Text>
               <Text variant="bodyMedium" style={[styles.value, { color: theme.colors.onSurface }]}>
-                {item.fiscalId}
+                {item.faturaNo}
               </Text>
             </View>
 
@@ -150,10 +189,10 @@ export default function Trash() {
               </Text>
               <View>
                 <Text variant="titleMedium" style={[styles.totalAmount, { color: theme.colors.primary }]}>
-                  ₺{item.total.toFixed(2)}
+                  ₺{item.totals.total.toFixed(2)}
                 </Text>
                 <Text variant="bodySmall" style={styles.paymentMethod}>
-                  {item.paymentMethod === 'cash' ? '💵 Nakit' : '💳 Kart'}
+                  {item.payment.type === 'cash' ? '💵 Nakit' : '💳 Kart'}
                 </Text>
               </View>
             </View>

@@ -1,0 +1,109 @@
+{
+  "storeName": "BiM Birlesik Magazalar A.S.",
+  "storeAddress": "Seyh Edibali Mh. Mamak Sinan Mah.12 Nolu Sk. No:20 Kahramanmaras",
+  "vdbNo": "1750051846",
+  "receiptType": "E-ARSIV FATURA BILGI FISI",
+  "receiptNo": "296",
+  "date": "14.10.2023",
+  "time": "18:32",
+  "ettn": "35e5f47b-6391-404c-b533-3177ed5a0ed9",
+  "faturaNo": "AE02023000296",
+  "customer": {
+    "vkn": "12345678901",
+    "name": "AHMET YILMAZ",
+    "address": "Seyh Edibali Mahallesi 1071 Sokak No:5/3 Kahramanmaras",
+    "email": "ahmet.yilmaz@email.com"
+  },
+  "items": [
+    {
+      "name": "ERKEK RIBANA AT",
+      "quantity": 1,
+      "price": 49.50,
+      "taxRate": 10
+    },
+    {
+      "name": "KEKCILEKLI180GR",
+      "quantity": 1,
+      "price": 27.50,
+      "taxRate": 1
+    },
+    {
+      "name": "YESIL ZEYTIN",
+      "quantity": 1,
+      "price": 39.50,
+      "taxRate": 1
+    },
+    {
+      "name": "TURK KAHVESI",
+      "quantity": 1,
+      "price": 22.50,
+      "taxRate": 1
+    },
+    {
+      "name": "MEYVELI ICECEK",
+      "quantity": 2,
+      "price": 8.00,
+      "taxRate": 10
+    },
+    {
+      "name": "SAKIZ 3 LU",
+      "quantity": 1,
+      "price": 10.00,
+      "taxRate": 1
+    },
+    {
+      "name": "KEK 50G ETI BRO",
+      "quantity": 1,
+      "price": 7.25,
+      "taxRate": 1
+    },
+    {
+      "name": "ERITME PEYNIR",
+      "quantity": 1,
+      "price": 99.50,
+      "taxRate": 1
+    },
+    {
+      "name": "SUT Y.YAGLI 1L",
+      "quantity": 1,
+      "price": 82.00,
+      "taxRate": 1
+    },
+    {
+      "name": "BULASIK SUNGERI",
+      "quantity": 1,
+      "price": 14.50,
+      "taxRate": 20
+    },
+    {
+      "name": "KASIK CIPS 90GR",
+      "quantity": 1,
+      "price": 12.50,
+      "taxRate": 1
+    },
+    {
+      "name": "ALISVERIS CANTA",
+      "quantity": 1,
+      "price": 17.50,
+      "taxRate": 10
+    }
+  ],
+  "payment": {
+    "type": "cash"
+  },
+  "totals": {
+    "subtotal": 378.03,
+    "kdv": 12.22,
+    "total": 390.25
+  },
+  "footer": {
+    "zNo": "4",
+    "ekuNo": "95466382",
+    "posInfo": "POS:2 - 215927",
+    "storeCode": "6309, EDIBALI / K.MARAS",
+    "barcode": "630900214110300040296",
+    "irsaliyeText": "Bu belge irsaliye yerine gecer",
+    "signatureText": "<< IMZA >>",
+    "thankYouMessage": "Bizi tercih ettiginiz icin tesekkur ederiz"
+  }
+} 

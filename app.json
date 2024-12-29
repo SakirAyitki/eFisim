@@ -4,10 +4,10 @@
     "slug": "eFisim",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "assets/images/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "assets/images/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -22,15 +22,19 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "assets/images/icon.png",
         "backgroundColor": "#ffffff"
       },
+      "package": "com.efisim.app",
+      "versionCode": 1,
       "permissions": [
-        "CAMERA"
+        "CAMERA",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "assets/images/favicon.png"
     },
     "plugins": [
       [
@@ -41,6 +45,11 @@
           "recordAudioAndroid": true
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "2a93919c-0bc5-4b46-9642-fde278a4614c"
+      }
+    }
   }
 }

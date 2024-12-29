@@ -4,23 +4,17 @@ import { Text, Button } from 'react-native-paper';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
 
 export default function Scanner() {
   const [scanned, setScanned] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
   const router = useRouter();
 
-  const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
+  const handleBarCodeScanned = async ({ data }: { data: string }) => {
     try {
-      setScanned(true);
       console.log('QR Kod içeriği:', data);
-      console.log('QR Kod içeriği türü:', typeof data);
-
-      // QR kod içeriğini kontrol et
-      if (!data) {
-        throw new Error('QR kod boş');
-      }
-
+      
       let parsedData;
       try {
         // Veriyi temizle ve parse et
@@ -31,20 +25,57 @@ export default function Scanner() {
         console.log('JSON parse başarılı:', parsedData);
       } catch (error) {
         console.error('JSON parse hatası:', error);
-        // Alternatif parse denemesi
-        try {
-          const altData = data.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
-          parsedData = JSON.parse(altData);
-          console.log('Alternatif parse başarılı');
-        } catch (parseError) {
-          console.error('Alternatif parse hatası:', parseError);
-          throw new Error('Fiş verisi okunamadı');
-        }
+        throw new Error('Fiş verisi okunamadı');
       }
 
-      // Gerekli alanların varlığını kontrol et
-      if (!parsedData.storeName || !parsedData.date || !parsedData.total || !parsedData.items) {
-        throw new Error('Geçersiz fiş formatı');
+      // Zorunlu alanların varlığını kontrol et
+      const requiredFields = [
+        'storeName',
+        'storeAddress',
+        'vdbNo',
+        'receiptType',
+        'receiptNo',
+        'date',
+        'time',
+        'ettn',
+        'faturaNo',
+        'items',
+        'payment',
+        'totals',
+        'footer'
+      ];
+
+      const missingFields = requiredFields.filter(field => !parsedData[field]);
+      if (missingFields.length > 0) {
+        console.error('Eksik alanlar:', missingFields);
+        throw new Error('Geçersiz fiş formatı: Eksik alanlar - ' + missingFields.join(', '));
+      }
+
+      // Items array kontrolü
+      if (!Array.isArray(parsedData.items) || parsedData.items.length === 0) {
+        throw new Error('Geçersiz fiş formatı: Ürün listesi boş veya geçersiz');
+      }
+
+      // Her ürünün gerekli alanlarını kontrol et
+      parsedData.items.forEach((item: any, index: number) => {
+        if (!item.name || typeof item.quantity !== 'number' || typeof item.price !== 'number' || typeof item.taxRate !== 'number') {
+          throw new Error(`Geçersiz ürün formatı: Ürün ${index + 1}`);
+        }
+      });
+
+      // Totals kontrolü
+      if (!parsedData.totals.subtotal || !parsedData.totals.kdv || !parsedData.totals.total) {
+        throw new Error('Geçersiz fiş formatı: Toplam bilgileri eksik');
+      }
+
+      // Payment kontrolü
+      if (!parsedData.payment.type || !['cash', 'card'].includes(parsedData.payment.type)) {
+        throw new Error('Geçersiz fiş formatı: Ödeme tipi geçersiz');
+      }
+
+      // Kart ödemesi ise cardInfo kontrolü
+      if (parsedData.payment.type === 'card' && (!parsedData.payment.cardInfo || !parsedData.payment.bank)) {
+        throw new Error('Geçersiz fiş formatı: Kart bilgileri eksik');
       }
 
       try {
@@ -57,24 +88,26 @@ export default function Scanner() {
         };
 
         const updatedReceipts = [...existingReceipts, newReceipt];
-        
         await AsyncStorage.setItem('receipts', JSON.stringify(updatedReceipts));
-        console.log('Fiş başarıyla kaydedildi:', newReceipt);
-
-        // Kısa bir gecikme ekle
-        setTimeout(() => {
-          router.back();
-        }, 1000);
-      } catch (storageError) {
-        console.error('Depolama hatası:', storageError);
-        throw new Error('Fiş kaydedilemedi');
+        
+        Alert.alert(
+          'Başarılı',
+          'Fiş başarıyla kaydedildi!',
+          [
+            {
+              text: 'Tamam',
+              onPress: () => router.back()
+            }
+          ]
+        );
+      } catch (error) {
+        console.error('Fiş kaydedilirken hata:', error);
+        Alert.alert('Hata', 'Fiş kaydedilirken bir hata oluştu.');
       }
-
     } catch (error) {
       console.error('QR kod işlenirken hata:', error);
       console.error('Hatalı veri:', data);
-      alert('Fiş okunamadı: ' + (error instanceof Error ? error.message : 'Bilinmeyen hata'));
-      setScanned(false);
+      Alert.alert('Hata', error instanceof Error ? error.message : 'QR kod okunamadı');
     }
   };
 

@@ -1,0 +1,54 @@
+{
+  "storeName": "BiM Birlesik Magazalar A.S.",
+  "storeAddress": "Cumhuriyet Mh. 806 S. Gamze Ap. No:12/10 Kiziltepe / Mardin",
+  "vdbNo": "1750051846",
+  "receiptType": "E-ARSIV FATURA BILGI FISI",
+  "receiptNo": "21",
+  "date": "26.11.2023",
+  "time": "12:06",
+  "ettn": "2210d67-0c4d-47c6-8a34-0e506017a917",
+  "faturaNo": "AE02023000393368",
+  "customer": {
+    "vkn": "47785617948",
+    "name": "ABDULLAH DEMIR",
+    "address": "CUMHURIYET MAHLESI 804 SOKAK MELISA APT Kiziltepe / Mardin",
+    "email": ""
+  },
+  "items": [
+    {
+      "name": "KUM MEK PAN.BEY. ANK",
+      "quantity": 1,
+      "price": 6990.00,
+      "taxRate": 20
+    }
+  ],
+  "payment": {
+    "type": "card",
+    "bank": "YAPI KREDI",
+    "cardInfo": {
+      "number": "525564******378",
+      "installment": "6",
+      "installmentAmount": "1,165.00",
+      "approvalCode": "769051",
+      "refNo": "0283769051",
+      "provisionNo": "T:6X1.165.00",
+      "batchNo": "S:2",
+      "terminalId": "0051165C"
+    }
+  },
+  "totals": {
+    "subtotal": 6990.00,
+    "kdv": 1165.00,
+    "total": 6990.00
+  },
+  "footer": {
+    "zNo": "26",
+    "ekuNo": "955810662",
+    "posInfo": "POS:2 - 163800 - S**** V****",
+    "storeCode": "10668, SELAHATTIN EYYUBI / KIZ",
+    "barcode": "10668022611300260021",
+    "irsaliyeText": "Bu belge irsaliye yerine gecer",
+    "signatureText": "<< IMZA >>",
+    "thankYouMessage": "Bizi tercih ettiginiz icin tesekkur ederiz"
+  }
+} 
