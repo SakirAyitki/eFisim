@@ -12,6 +12,8 @@ export default function Scanner() {
   const router = useRouter();
 
   const handleBarCodeScanned = async ({ data }: { data: string }) => {
+    setScanned(true);
+    
     try {
       console.log('QR Kod içeriği:', data);
       
@@ -96,7 +98,7 @@ export default function Scanner() {
           [
             {
               text: 'Tamam',
-              onPress: () => router.back()
+              onPress: () => router.replace('/')
             }
           ]
         );
@@ -107,7 +109,16 @@ export default function Scanner() {
     } catch (error) {
       console.error('QR kod işlenirken hata:', error);
       console.error('Hatalı veri:', data);
-      Alert.alert('Hata', error instanceof Error ? error.message : 'QR kod okunamadı');
+      Alert.alert(
+        'Hata', 
+        error instanceof Error ? error.message : 'QR kod okunamadı',
+        [
+          {
+            text: 'Tamam',
+            onPress: () => router.replace('/')
+          }
+        ]
+      );
     }
   };
 
@@ -130,21 +141,29 @@ export default function Scanner() {
         style={styles.camera}
         facing="back"
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+        barcodeScannerSettings={{
+          barcodeTypes: ["qr"],
+        }}
+        ratio="16:9"
       >
         <View style={styles.overlay}>
-          <Text style={styles.overlayText}>
-            Fiş QR kodunu tarayın
-          </Text>
+          <View style={styles.unfocusedContainer}>
+            <View style={styles.focusedContainer}>
+              <View style={styles.scannerFrame}>
+                <View style={styles.cornerTL} />
+                <View style={styles.cornerTR} />
+                <View style={styles.cornerBL} />
+                <View style={styles.cornerBR} />
+              </View>
+            </View>
+          </View>
+          <View style={styles.textContainer}>
+            <Text style={styles.title}>Fişinizi Taratın</Text>
+            <Text style={styles.description}>
+              Fişin üzerindeki QR kodu çerçevenin içine yerleştirin
+            </Text>
+          </View>
         </View>
-        {scanned && (
-          <Button 
-            mode="contained" 
-            onPress={() => setScanned(false)}
-            style={styles.button}
-          >
-            Tekrar Tara
-          </Button>
-        )}
       </CameraView>
     </View>
   );
@@ -153,27 +172,89 @@ export default function Scanner() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
   },
   camera: {
     flex: 1,
+    aspectRatio: 9/16,
+    width: '100%',
   },
   overlay: {
-    position: 'absolute',
-    top: 50,
-    width: '100%',
+    flex: 1,
+  },
+  unfocusedContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  focusedContainer: {
+    flex: 1,
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    padding: 20,
+    justifyContent: 'center',
   },
-  overlayText: {
-    color: 'white',
-    fontSize: 18,
+  scannerFrame: {
+    width: 280,
+    height: 280,
+    backgroundColor: 'transparent',
+    position: 'relative',
   },
-  button: {
+  cornerTL: {
     position: 'absolute',
-    bottom: 50,
-    width: '80%',
-    alignSelf: 'center',
+    top: 0,
+    left: 0,
+    width: 50,
+    height: 50,
+    borderLeftWidth: 6,
+    borderTopWidth: 6,
+    borderColor: 'white',
+  },
+  cornerTR: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 50,
+    height: 50,
+    borderRightWidth: 6,
+    borderTopWidth: 6,
+    borderColor: 'white',
+  },
+  cornerBL: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: 50,
+    height: 50,
+    borderLeftWidth: 6,
+    borderBottomWidth: 6,
+    borderColor: 'white',
+  },
+  cornerBR: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 50,
+    height: 50,
+    borderRightWidth: 6,
+    borderBottomWidth: 6,
+    borderColor: 'white',
+  },
+  textContainer: {
+    position: 'absolute',
+    bottom: 80,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  title: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  description: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
   },
 }); 

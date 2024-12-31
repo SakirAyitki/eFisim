@@ -216,25 +216,36 @@ export default function Layout() {
           <Stack.Screen 
             name="index" 
             options={{ 
-              title: "Fiş Listesi"  // Ana sayfa başlığı
+              title: "Fiş Listesi"  
             }} 
           />
           <Stack.Screen 
             name="trash" 
             options={{ 
-              title: "Çöp Kutusu"  // Çöp kutusu sayfası başlığı
+              title: "Çöp Kutusu",
+              headerBackTitle: '',
+            }} 
+          />
+          <Stack.Screen 
+            name="trash/[id]" 
+            options={{ 
+              title: "Silinen Fiş Detayı",
+              headerBackTitle: '',
             }} 
           />
           <Stack.Screen 
             name="scanner" 
             options={{ 
-              title: "Fiş Tara"  // Çöp kutusu sayfası başlığı
-            }} 
+              title: "Fiş Tara",
+              presentation: 'modal',
+              animation: 'slide_from_bottom',
+            }}
           />
           <Stack.Screen 
-            name="receipt/[id]" 
+            name="[id]" 
             options={{ 
-              title: "Fiş Detayı"  // Çöp kutusu sayfası başlığı
+              title: "Fiş Detayı",
+              headerBackTitle: '',
             }} 
           />
         </Stack>

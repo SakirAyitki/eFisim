@@ -6,15 +6,16 @@ import { Receipt } from '../types/Receipt';
 interface ReceiptCardProps {
   item: Receipt;
   onDelete: (id: string) => void;
+  isTrash?: boolean;
 }
 
-export default function ReceiptCard({ item, onDelete }: ReceiptCardProps) {
+export default function ReceiptCard({ item, onDelete, isTrash = false }: ReceiptCardProps) {
   const router = useRouter();
 
   return (
     <TouchableOpacity 
       style={styles.card} 
-      onPress={() => router.push(`/${item.id}`)}
+      onPress={() => router.push(isTrash ? `/trash/${item.id}` : `/${item.id}`)}
       activeOpacity={0.7}
     >
       {/* Üst Kısım */}
