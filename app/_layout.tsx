@@ -59,9 +59,16 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen 
-          name="receipt/[id]" 
+          name="[id]" 
           options={{ 
             title: 'Fiş Detayı',
+            headerBackTitle: '',
+          }}
+        />
+        <Stack.Screen 
+          name="trash" 
+          options={{ 
+            title: 'Çöp Kutusu',
             headerBackTitle: '',
           }}
         />
