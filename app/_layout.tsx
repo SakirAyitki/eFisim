@@ -231,6 +231,12 @@ export default function Layout() {
               title: "Fiş Tara"  // Çöp kutusu sayfası başlığı
             }} 
           />
+          <Stack.Screen 
+            name="receipt/[id]" 
+            options={{ 
+              title: "Fiş Detayı"  // Çöp kutusu sayfası başlığı
+            }} 
+          />
         </Stack>
         
       </ThemeProvider>
