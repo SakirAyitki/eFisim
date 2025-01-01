@@ -1,21 +1,48 @@
-import { View, FlatList, StyleSheet, Platform, TouchableOpacity, TextInput } from 'react-native';
-import { useTheme, Button, Text } from 'react-native-paper';
-import { useFocusEffect } from 'expo-router';
+import { View, FlatList, StyleSheet, Platform, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { useTheme, Button, Text, IconButton } from 'react-native-paper';
+import { useFocusEffect, router } from 'expo-router';
 import { useCallback, useState, useRef } from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ReceiptCard from './components/ReceiptCard';
 import EmptyState from './components/EmptyState';
 import ActionButtons from './components/ActionButtons';
 import useReceipts from './hooks/useReceipts';
-import type { Receipt } from './types/Receipt';
+import { useAuth } from './contexts/AuthContext';
+import type { Receipt } from '../services/receiptService';
 
 export default function Home() {
   const theme = useTheme();
+  const { logout } = useAuth();
   const { receipts, loadReceipts, deleteReceipt } = useReceipts();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const inputRef = useRef<TextInput>(null);
+
+  const handleLogout = async () => {
+    Alert.alert(
+      'Çıkış Yap',
+      'Çıkış yapmak istediğinize emin misiniz?',
+      [
+        {
+          text: 'İptal',
+          style: 'cancel'
+        },
+        {
+          text: 'Çıkış Yap',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await logout();
+              router.replace('/(auth)/login');
+            } catch (error) {
+              Alert.alert('Hata', 'Çıkış yapılırken bir hata oluştu.');
+            }
+          }
+        }
+      ]
+    );
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -82,6 +109,16 @@ export default function Home() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={styles.header}>
+        <Text variant="headlineSmall" style={styles.title}>Fiş Listesi</Text>
+        <IconButton
+          icon="logout"
+          mode="contained"
+          onPress={handleLogout}
+          style={styles.logoutButton}
+        />
+      </View>
+
       <View style={styles.filterContainer}>
         <View style={styles.searchContainer}>
           <View style={styles.searchWrapper}>
@@ -144,7 +181,7 @@ export default function Home() {
               onDelete={deleteReceipt}
             />
           )}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id || ''}
           contentContainerStyle={styles.list}
         />
       )}
@@ -156,6 +193,21 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  title: {
+    fontWeight: 'bold',
+  },
+  logoutButton: {
+    marginLeft: 8,
   },
   filterContainer: {
     padding: 8,

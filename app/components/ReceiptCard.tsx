@@ -1,21 +1,35 @@
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Text, IconButton } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { Receipt } from '../types/Receipt';
+import { Receipt } from '../../services/receiptService';
 
 interface ReceiptCardProps {
   item: Receipt;
   onDelete: (id: string) => void;
-  isTrash?: boolean;
 }
 
-export default function ReceiptCard({ item, onDelete, isTrash = false }: ReceiptCardProps) {
+export default function ReceiptCard({ item, onDelete }: ReceiptCardProps) {
   const router = useRouter();
+
+  // Güvenli erişim için yardımcı fonksiyonlar
+  const getTotal = () => {
+    if (item.totals?.total) {
+      return item.totals.total.toFixed(2);
+    }
+    return '0.00';
+  };
+
+  const getPaymentType = () => {
+    if (item.payment?.type) {
+      return item.payment.type;
+    }
+    return 'cash';
+  };
 
   return (
     <TouchableOpacity 
       style={styles.card} 
-      onPress={() => router.push(isTrash ? `/trash/${item.id}` : `/${item.id}`)}
+      onPress={() => router.push(`/receipt/${item.id}`)}
       activeOpacity={0.7}
     >
       {/* Üst Kısım */}
@@ -40,7 +54,7 @@ export default function ReceiptCard({ item, onDelete, isTrash = false }: Receipt
           iconColor="#DC2626"
           onPress={(e) => {
             e.stopPropagation();
-            onDelete(item.id);
+            onDelete(item.id || '');
           }}
           style={styles.deleteButton}
         />
@@ -51,21 +65,21 @@ export default function ReceiptCard({ item, onDelete, isTrash = false }: Receipt
         <View style={styles.infoGrid}>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Fiş No</Text>
-            <Text style={styles.receiptNumber}>{item.faturaNo}</Text>
+            <Text style={styles.receiptNumber}>{item.faturaNo || 'Belirtilmemiş'}</Text>
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Toplam</Text>
             <View style={styles.totalInfo}>
-              <Text style={styles.totalAmount}>₺{item.totals.total.toFixed(2)}</Text>
+              <Text style={styles.totalAmount}>₺{getTotal()}</Text>
               <View style={styles.paymentMethod}>
                 <IconButton
-                  icon={item.payment.type === 'cash' ? 'cash' : 'credit-card-outline'}
+                  icon={getPaymentType() === 'cash' ? 'cash' : 'credit-card-outline'}
                   size={14}
                   iconColor="#6B7280"
                   style={styles.paymentIcon}
                 />
                 <Text style={styles.paymentText}>
-                  {item.payment.type === 'cash' ? 'Nakit' : 'Kart'}
+                  {getPaymentType() === 'cash' ? 'Nakit' : 'Kart'}
                 </Text>
               </View>
             </View>
@@ -182,5 +196,5 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginLeft: 2,
     letterSpacing: -0.2,
-  },
+  }
 }); 

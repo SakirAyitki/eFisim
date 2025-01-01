@@ -2,61 +2,10 @@ import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Text, Surface, useTheme, IconButton, Avatar, Divider } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-interface Receipt {
-  id: string;
-  storeName: string;
-  storeAddress: string;
-  vdbNo: string;
-  receiptType: string;
-  receiptNo: string;
-  date: string;
-  time: string;
-  ettn: string;
-  faturaNo: string;
-  customer?: {
-    vkn: string;
-    name: string;
-    address: string;
-    email: string;
-  };
-  items: Array<{
-    name: string;
-    quantity: number;
-    price: number;
-    taxRate: number;
-  }>;
-  payment: {
-    type: 'cash' | 'card';
-    bank?: string;
-    cardInfo?: {
-      number: string;
-      installment: string;
-      installmentAmount: string;
-      approvalCode: string;
-      refNo: string;
-      provisionNo: string;
-      batchNo: string;
-      terminalId: string;
-    };
-  };
-  totals: {
-    subtotal: number;
-    kdv: number;
-    total: number;
-  };
-  footer: {
-    zNo: string;
-    ekuNo: string;
-    posInfo: string;
-    storeCode: string;
-    barcode: string;
-    irsaliyeText: string;
-    signatureText: string;
-    thankYouMessage: string;
-  };
-}
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../../src/config/firebase';
+import type { Receipt } from '../../../services/receiptService';
+import ReceiptService from '../../../services/receiptService';
 
 export default function ReceiptDetail() {
   const { id } = useLocalSearchParams();
@@ -70,11 +19,68 @@ export default function ReceiptDetail() {
 
   const loadReceipt = async () => {
     try {
-      const savedReceipts = await AsyncStorage.getItem('receipts');
-      if (savedReceipts) {
-        const receipts: Receipt[] = JSON.parse(savedReceipts);
-        const foundReceipt = receipts.find(r => r.id === id);
-        setReceipt(foundReceipt || null);
+      const docRef = doc(db, 'receipts', id as string);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        // Veri dönüşümü ve kontrolleri
+        const transformedReceipt = {
+          id: docSnap.id,
+          storeName: data.storeName || 'Bilinmeyen Market',
+          storeAddress: data.storeAddress || '',
+          vdbNo: data.vdbNo || '',
+          receiptType: data.receiptType || 'FATURA',
+          receiptNo: data.receiptNo || '',
+          date: data.date || new Date().toLocaleDateString('tr-TR'),
+          time: data.time || new Date().toLocaleTimeString('tr-TR'),
+          ettn: data.ettn || '',
+          faturaNo: data.faturaNo || '',
+          items: Array.isArray(data.items) ? data.items.map((item: any) => ({
+            name: item.name || 'Bilinmeyen Ürün',
+            quantity: Number(item.quantity) || 1,
+            price: Number(item.price) || 0,
+            taxRate: Number(item.taxRate) || 0
+          })) : [],
+          payment: {
+            type: data.payment?.type || 'cash',
+            bank: data.payment?.bank || '',
+            cardInfo: data.payment?.cardInfo ? {
+              number: data.payment.cardInfo.number || '',
+              installment: data.payment.cardInfo.installment || '',
+              installmentAmount: data.payment.cardInfo.installmentAmount || '',
+              approvalCode: data.payment.cardInfo.approvalCode || '',
+              refNo: data.payment.cardInfo.refNo || '',
+              provisionNo: data.payment.cardInfo.provisionNo || '',
+              batchNo: data.payment.cardInfo.batchNo || '',
+              terminalId: data.payment.cardInfo.terminalId || ''
+            } : undefined
+          },
+          totals: {
+            subtotal: Number(data.totals?.subtotal) || 0,
+            kdv: Number(data.totals?.kdv) || 0,
+            total: Number(data.totals?.total) || 0
+          },
+          footer: {
+            zNo: data.footer?.zNo || '',
+            ekuNo: data.footer?.ekuNo || '',
+            posInfo: data.footer?.posInfo || '',
+            storeCode: data.footer?.storeCode || '',
+            barcode: data.footer?.barcode || '',
+            irsaliyeText: data.footer?.irsaliyeText || '',
+            signatureText: data.footer?.signatureText || '',
+            thankYouMessage: data.footer?.thankYouMessage || ''
+          },
+          isDeleted: data.isDeleted || false,
+          deletedAt: data.deletedAt ? new Date(data.deletedAt.seconds * 1000) : null,
+          userId: data.userId || '',
+          createdAt: data.createdAt ? new Date(data.createdAt.seconds * 1000) : new Date()
+        };
+
+        console.log('Dönüştürülmüş fiş:', transformedReceipt);
+        setReceipt(transformedReceipt as Receipt);
+      } else {
+        console.error('Fiş bulunamadı');
       }
     } catch (error) {
       console.error('Fiş yüklenirken hata:', error);
@@ -84,21 +90,18 @@ export default function ReceiptDetail() {
   const deleteReceipt = async () => {
     try {
       Alert.alert(
-        "Fiş Sil",
-        "Bu fişi silmek istediğinize emin misiniz?",
+        "Fişi Çöp Kutusuna Taşı",
+        "Bu fişi çöp kutusuna taşımak istediğinize emin misiniz?",
         [
           {
             text: "İptal",
             style: "cancel"
           },
           {
-            text: "Sil",
+            text: "Taşı",
             onPress: async () => {
-              const savedReceipts = await AsyncStorage.getItem('receipts');
-              if (savedReceipts) {
-                const receipts: Receipt[] = JSON.parse(savedReceipts);
-                const updatedReceipts = receipts.filter(r => r.id !== id);
-                await AsyncStorage.setItem('receipts', JSON.stringify(updatedReceipts));
+              if (receipt?.id) {
+                await ReceiptService.deleteReceipt(receipt.id, false);
                 router.back();
               }
             },
@@ -107,8 +110,8 @@ export default function ReceiptDetail() {
         ]
       );
     } catch (error) {
-      console.error('Fiş silinirken hata:', error);
-      Alert.alert('Hata', 'Fiş silinirken bir hata oluştu.');
+      console.error('Fiş taşınırken hata:', error);
+      Alert.alert('Hata', 'Fiş çöp kutusuna taşınırken bir hata oluştu.');
     }
   };
 
@@ -130,6 +133,7 @@ export default function ReceiptDetail() {
             size={24}
             onPress={deleteReceipt}
             style={styles.deleteButton}
+            containerColor={theme.colors.surface}
           />
           <View style={styles.storeInfo}>
             <Avatar.Icon 
@@ -384,6 +388,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     borderRadius: 16,
     padding: 16,
+    position: 'relative',
   },
   storeInfo: {
     flexDirection: 'row',
@@ -655,5 +660,7 @@ const styles = StyleSheet.create({
     right: 8,
     top: 8,
     margin: 0,
+    zIndex: 1,
+    elevation: 5,
   },
 }); 
