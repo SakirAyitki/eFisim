@@ -1,15 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
+import authService from '../services/authService';
 
 export default function Scanner() {
   const [scanned, setScanned] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
   const router = useRouter();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const isAuthenticated = await authService.isAuthenticated();
+      if (!isAuthenticated) {
+        Alert.alert('Uyarı', 'Lütfen giriş yapın.');
+        router.replace('/login');
+      }
+    };
+    checkAuth();
+  }, []);
 
   const handleBarCodeScanned = async ({ data }: { data: string }) => {
     setScanned(true);
@@ -158,10 +170,7 @@ export default function Scanner() {
             </View>
           </View>
           <View style={styles.textContainer}>
-            <Text style={styles.title}>Fişinizi Taratın</Text>
-            <Text style={styles.description}>
-              Fişin üzerindeki QR kodu çerçevenin içine yerleştirin
-            </Text>
+            <Text style={styles.title}>QR Fişinizi Taratın</Text>
           </View>
         </View>
       </CameraView>
@@ -172,6 +181,8 @@ export default function Scanner() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   camera: {
     flex: 1,
@@ -195,6 +206,8 @@ const styles = StyleSheet.create({
     height: 280,
     backgroundColor: 'transparent',
     position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cornerTL: {
     position: 'absolute',
@@ -242,7 +255,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 20,
+    flexWrap: 'wrap',
+    maxWidth: '100%',
   },
   title: {
     color: 'white',
@@ -250,6 +266,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 12,
     textAlign: 'center',
+    width: '100%',
   },
   description: {
     color: 'rgba(255, 255, 255, 0.8)',

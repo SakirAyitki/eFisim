@@ -9,6 +9,7 @@ import ActionButtons from '../components/ActionButtons';
 import useReceipts from '../hooks/useReceipts';
 import { useAuth } from '../contexts/AuthContext';
 import type { Receipt } from '../../services/receiptService';
+import { auth } from '../../src/config/firebase';
 
 export default function Home() {
   const theme = useTheme();
@@ -46,6 +47,11 @@ export default function Home() {
 
   useFocusEffect(
     useCallback(() => {
+      const user = auth.currentUser;
+      if (!user) {
+        router.replace('/(auth)/login');
+        return;
+      }
       loadReceipts();
     }, [loadReceipts])
   );

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
 import { loginSchema } from '../types/auth';
 
@@ -10,6 +10,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const router = useRouter();
 
   const handleLogin = async () => {
     try {
@@ -17,6 +18,8 @@ export default function LoginScreen() {
       const data = { email, password };
       const validatedData = loginSchema.parse(data);
       await login(validatedData);
+      // Login başarılı olduğunda ana sayfaya yönlendir
+      router.replace('/');
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);

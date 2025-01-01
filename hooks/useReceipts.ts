@@ -1,19 +1,26 @@
 import { useState, useCallback } from 'react';
 import { Alert } from 'react-native';
 import receiptService, { Receipt } from '../services/receiptService';
+import { auth } from '../src/config/firebase';
 
 export default function useReceipts() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const loadReceipts = useCallback(async () => {
+    if (!auth.currentUser) {
+      return;
+    }
+
     try {
       setIsLoading(true);
       const firestoreReceipts = await receiptService.getUserReceipts();
       setReceipts(firestoreReceipts);
     } catch (error) {
       console.error('Fişler yüklenirken hata:', error);
-      Alert.alert('Hata', 'Fişler yüklenirken bir hata oluştu.');
+      if (error instanceof Error && !error.message.includes('Kullanıcı girişi yapılmamış')) {
+        Alert.alert('Hata', 'Fişler yüklenirken bir hata oluştu.');
+      }
     } finally {
       setIsLoading(false);
     }
