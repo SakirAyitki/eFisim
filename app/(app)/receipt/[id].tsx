@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   bankBadge: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#6200ee',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 20,
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   installmentBadge: {
-    backgroundColor: '#666',
+    backgroundColor: '#6200ee',
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 12,
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   grandTotalAmount: {
-    color: '#2196F3',
+    color: '#6200ee',
     fontWeight: '700',
     fontSize: 28,
   },

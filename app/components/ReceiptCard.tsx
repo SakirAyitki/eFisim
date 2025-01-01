@@ -75,7 +75,7 @@ export default function ReceiptCard({ item, onDelete }: ReceiptCardProps) {
                 <IconButton
                   icon={getPaymentType() === 'cash' ? 'cash' : 'credit-card-outline'}
                   size={14}
-                  iconColor="#6B7280"
+                  iconColor="#6200ee"
                   style={styles.paymentIcon}
                 />
                 <Text style={styles.paymentText}>
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 12,
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#6200ee',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   totalAmount: {
     fontSize: 19,
     fontWeight: '600',
-    color: '#3B82F6',
+    color: '#6200ee',
     marginBottom: 4,
     letterSpacing: -0.4,
   },
