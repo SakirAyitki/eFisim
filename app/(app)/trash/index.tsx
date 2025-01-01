@@ -229,11 +229,6 @@ export default function TrashScreen() {
               Çöp Kutusu
             </Text>
           </View>
-          <View style={styles.statsContainer}>
-            <Text variant="labelMedium" style={styles.statsText}>
-              {receipts.length} silinmiş fiş
-            </Text>
-          </View>
         </View>
       </View>
 
@@ -258,7 +253,7 @@ export default function TrashScreen() {
             <IconButton
               icon="delete-sweep"
               size={22}
-              iconColor={theme.colors.onErrorContainer}
+              iconColor={theme.colors.surface}
               style={{ margin: 0, padding: 0 }}
             />
             <Text style={styles.floatingButtonText}>Çöp Kutusunu Boşalt</Text>
@@ -309,18 +304,12 @@ const getStyles = (theme: any) => StyleSheet.create({
     letterSpacing: -0.5,
   },
   statsContainer: {
-    backgroundColor: theme.colors.secondaryContainer,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 100,
-    elevation: 2,
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   statsText: {
-    color: theme.colors.onSecondaryContainer,
+    color: theme.colors.onSurfaceVariant,
     fontWeight: '600',
     fontSize: 13,
   },
@@ -445,7 +434,7 @@ const getStyles = (theme: any) => StyleSheet.create({
   floatingButton: {
     width: '100%',
     height: 48,
-    backgroundColor: theme.colors.errorContainer,
+    backgroundColor: theme.colors.error,
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -458,7 +447,7 @@ const getStyles = (theme: any) => StyleSheet.create({
     shadowRadius: 4,
   },
   floatingButtonText: {
-    color: theme.colors.onErrorContainer,
+    color: theme.colors.surface,
     fontWeight: '600',
     fontSize: 15,
     letterSpacing: 0.1,
