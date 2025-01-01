@@ -3,6 +3,7 @@ import { Text, Surface, useTheme, IconButton, ActivityIndicator } from 'react-na
 import { useEffect, useState } from 'react';
 import { Receipt, default as ReceiptService } from '../../../services/receiptService';
 import { useRouter } from 'expo-router';
+import Header from '../../../components/Header';
 
 export default function TrashScreen() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
@@ -215,22 +216,7 @@ export default function TrashScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.headerContainer}>
-        <View style={styles.headerContent}>
-          <View style={styles.headerLeft}>
-            <IconButton
-              icon="arrow-left"
-              size={24}
-              iconColor={theme.colors.onBackground}
-              style={styles.backButton}
-              onPress={() => router.back()}
-            />
-            <Text variant="headlineMedium" style={styles.headerTitle}>
-              Çöp Kutusu
-            </Text>
-          </View>
-        </View>
-      </View>
+      <Header title="Çöp Kutusu" />
 
       <FlatList
         data={receipts}
@@ -339,6 +325,7 @@ const getStyles = (theme: any) => StyleSheet.create({
   storeInfo: {
     flex: 1,
     marginRight: 16,
+    alignItems: 'flex-start',
   },
   storeName: {
     fontSize: 20,
@@ -346,6 +333,7 @@ const getStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.onSurface,
     marginBottom: 6,
     letterSpacing: -0.5,
+    textAlign: 'left',
   },
   receiptMeta: {
     marginTop: 4,

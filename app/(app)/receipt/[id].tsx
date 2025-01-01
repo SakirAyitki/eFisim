@@ -1,119 +1,79 @@
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Text, Surface, useTheme, IconButton, Avatar, Divider } from 'react-native-paper';
+import { Text, IconButton, useTheme, Surface, Avatar, Divider } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../src/config/firebase';
 import type { Receipt } from '../../../services/receiptService';
-import ReceiptService from '../../../services/receiptService';
+import receiptService from '../../../services/receiptService';
 
 export default function ReceiptDetail() {
   const { id } = useLocalSearchParams();
-  const [receipt, setReceipt] = useState<Receipt | null>(null);
   const theme = useTheme();
   const router = useRouter();
+  const [receipt, setReceipt] = useState<Receipt | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const loadReceipt = async () => {
+      if (!id) return;
+      try {
+        const docRef = doc(db, 'receipts', id.toString());
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          setReceipt({
+            id: docSnap.id,
+            ...docSnap.data()
+          } as Receipt);
+        } else {
+          console.error('Fiş bulunamadı');
+        }
+      } catch (error) {
+        console.error('Fiş yüklenirken hata:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadReceipt();
   }, [id]);
 
-  const loadReceipt = async () => {
-    try {
-      const docRef = doc(db, 'receipts', id as string);
-      const docSnap = await getDoc(docRef);
-      
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        // Veri dönüşümü ve kontrolleri
-        const transformedReceipt = {
-          id: docSnap.id,
-          storeName: data.storeName || 'Bilinmeyen Market',
-          storeAddress: data.storeAddress || '',
-          vdbNo: data.vdbNo || '',
-          receiptType: data.receiptType || 'FATURA',
-          receiptNo: data.receiptNo || '',
-          date: data.date || new Date().toLocaleDateString('tr-TR'),
-          time: data.time || new Date().toLocaleTimeString('tr-TR'),
-          ettn: data.ettn || '',
-          faturaNo: data.faturaNo || '',
-          items: Array.isArray(data.items) ? data.items.map((item: any) => ({
-            name: item.name || 'Bilinmeyen Ürün',
-            quantity: Number(item.quantity) || 1,
-            price: Number(item.price) || 0,
-            taxRate: Number(item.taxRate) || 0
-          })) : [],
-          payment: {
-            type: data.payment?.type || 'cash',
-            bank: data.payment?.bank || '',
-            cardInfo: data.payment?.cardInfo ? {
-              number: data.payment.cardInfo.number || '',
-              installment: data.payment.cardInfo.installment || '',
-              installmentAmount: data.payment.cardInfo.installmentAmount || '',
-              approvalCode: data.payment.cardInfo.approvalCode || '',
-              refNo: data.payment.cardInfo.refNo || '',
-              provisionNo: data.payment.cardInfo.provisionNo || '',
-              batchNo: data.payment.cardInfo.batchNo || '',
-              terminalId: data.payment.cardInfo.terminalId || ''
-            } : undefined
-          },
-          totals: {
-            subtotal: Number(data.totals?.subtotal) || 0,
-            kdv: Number(data.totals?.kdv) || 0,
-            total: Number(data.totals?.total) || 0
-          },
-          footer: {
-            zNo: data.footer?.zNo || '',
-            ekuNo: data.footer?.ekuNo || '',
-            posInfo: data.footer?.posInfo || '',
-            storeCode: data.footer?.storeCode || '',
-            barcode: data.footer?.barcode || '',
-            irsaliyeText: data.footer?.irsaliyeText || '',
-            signatureText: data.footer?.signatureText || '',
-            thankYouMessage: data.footer?.thankYouMessage || ''
-          },
-          isDeleted: data.isDeleted || false,
-          deletedAt: data.deletedAt ? new Date(data.deletedAt.seconds * 1000) : null,
-          userId: data.userId || '',
-          createdAt: data.createdAt ? new Date(data.createdAt.seconds * 1000) : new Date()
-        };
-
-        console.log('Dönüştürülmüş fiş:', transformedReceipt);
-        setReceipt(transformedReceipt as Receipt);
-      } else {
-        console.error('Fiş bulunamadı');
-      }
-    } catch (error) {
-      console.error('Fiş yüklenirken hata:', error);
-    }
-  };
-
-  const deleteReceipt = async () => {
-    try {
-      Alert.alert(
-        "Fişi Çöp Kutusuna Taşı",
-        "Bu fişi çöp kutusuna taşımak istediğinize emin misiniz?",
-        [
-          {
-            text: "İptal",
-            style: "cancel"
-          },
-          {
-            text: "Taşı",
-            onPress: async () => {
+  const handleDelete = () => {
+    Alert.alert(
+      "Fişi Sil",
+      "Bu fişi silmek istediğinize emin misiniz?",
+      [
+        {
+          text: "İptal",
+          style: "cancel"
+        },
+        {
+          text: "Sil",
+          onPress: async () => {
+            try {
               if (receipt?.id) {
-                await ReceiptService.deleteReceipt(receipt.id, false);
+                await receiptService.deleteReceipt(receipt.id);
                 router.back();
               }
-            },
-            style: "destructive"
-          }
-        ]
-      );
-    } catch (error) {
-      console.error('Fiş taşınırken hata:', error);
-      Alert.alert('Hata', 'Fiş çöp kutusuna taşınırken bir hata oluştu.');
-    }
+            } catch (error) {
+              console.error('Fiş silinirken hata:', error);
+              Alert.alert('Hata', 'Fiş silinirken bir hata oluştu.');
+            }
+          },
+          style: "destructive"
+        }
+      ]
+    );
   };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text>Yükleniyor...</Text>
+      </View>
+    );
+  }
 
   if (!receipt) {
     return (
@@ -124,255 +84,248 @@ export default function ReceiptDetail() {
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
-        <Surface style={[styles.storeCard, { backgroundColor: theme.colors.surface }]} elevation={2}>
-          <IconButton
-            icon="delete"
-            iconColor={theme.colors.error}
-            size={24}
-            onPress={deleteReceipt}
-            style={styles.deleteButton}
-            containerColor={theme.colors.surface}
-          />
-          <View style={styles.storeInfo}>
-            <Avatar.Icon 
-              size={60} 
-              icon="store" 
-              style={{ backgroundColor: theme.colors.primary }}
-              color="white"
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.header]}>
+        <IconButton
+          icon="arrow-left"
+          onPress={() => router.back()}
+        />
+        <Text variant="titleLarge">Fiş Detayı</Text>
+        <View style={{ width: 48 }} />
+      </View>
+
+      <ScrollView style={[styles.content, { backgroundColor: theme.colors.background }]}>
+        <View style={[styles.storeHeader, { backgroundColor: theme.colors.background }]}>
+          <Surface style={[styles.storeCard, { backgroundColor: theme.colors.surface }]} elevation={2}>
+            <IconButton
+              icon="delete"
+              iconColor={theme.colors.error}
+              size={24}
+              onPress={handleDelete}
+              style={styles.deleteButton}
+              containerColor={theme.colors.surface}
             />
-            <View style={styles.storeDetails}>
-              <Text variant="titleLarge" style={[styles.storeName, { color: theme.colors.onSurface }]}>
-                {receipt.storeName}
-              </Text>
-              <View style={styles.dateTimeContainer}>
-                <IconButton
-                  icon="calendar"
-                  size={16}
-                  style={styles.smallIcon}
-                />
-                <Text variant="bodyMedium" style={[styles.date, { color: theme.colors.onSurfaceVariant }]}>
-                  {receipt.date}
+            <View style={styles.storeInfo}>
+              <Avatar.Icon 
+                size={60} 
+                icon="store" 
+                style={{ backgroundColor: theme.colors.primary }}
+                color="white"
+              />
+              <View style={styles.storeDetails}>
+                <Text variant="titleLarge" style={[styles.storeName, { color: theme.colors.onSurface }]}>
+                  {receipt.storeName}
                 </Text>
-                <IconButton
-                  icon="clock-outline"
-                  size={16}
-                  style={styles.smallIcon}
-                />
-                <Text variant="bodyMedium" style={[styles.date, { color: theme.colors.onSurfaceVariant }]}>
-                  {receipt.time}
+                <View style={styles.dateTimeContainer}>
+                  <IconButton
+                    icon="calendar"
+                    size={16}
+                    style={styles.smallIcon}
+                  />
+                  <Text variant="bodyMedium" style={[styles.date, { color: theme.colors.onSurfaceVariant }]}>
+                    {receipt.date}
+                  </Text>
+                  <IconButton
+                    icon="clock-outline"
+                    size={16}
+                    style={styles.smallIcon}
+                  />
+                  <Text variant="bodyMedium" style={[styles.date, { color: theme.colors.onSurfaceVariant }]}>
+                    {receipt.time}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </Surface>
+        </View>
+
+        <Surface style={[styles.section, { backgroundColor: theme.colors.surface }]} elevation={1}>
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.primary }]}>
+            Fiş Detayları
+          </Text>
+          <View style={styles.detailGrid}>
+            <View style={styles.detailGridItem}>
+              <Text style={styles.label}>Fiş No</Text>
+              <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.faturaNo}</Text>
+            </View>
+            <View style={styles.detailGridItem}>
+              <Text style={styles.label}>VDB No</Text>
+              <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.vdbNo}</Text>
+            </View>
+            <View style={styles.detailGridItem}>
+              <Text style={styles.label}>ETTN</Text>
+              <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.ettn}</Text>
+            </View>
+            <View style={styles.detailGridItem}>
+              <Text style={styles.label}>Fiş Türü</Text>
+              <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.receiptType}</Text>
+            </View>
+          </View>
+          <View style={styles.addressContainer}>
+            <Text style={styles.label}>Mağaza Adresi</Text>
+            <Text style={[styles.addressValue, { color: theme.colors.onSurface }]}>{receipt.storeAddress}</Text>
+          </View>
+        </Surface>
+
+        <Surface style={[styles.section, { backgroundColor: theme.colors.surface }]} elevation={1}>
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.primary }]}>
+            Ürünler
+          </Text>
+          {receipt.items.map((item, index) => (
+            <View key={index} style={styles.itemContainer}>
+              <View style={styles.itemRow}>
+                <View style={styles.itemInfo}>
+                  <Text style={[styles.itemName, { color: theme.colors.onSurface }]}>{item.name}</Text>
+                  <View style={styles.itemDetails}>
+                    <Text style={styles.itemQuantity}>{item.quantity} adet × ₺{item.price.toFixed(2)}</Text>
+                    <View style={styles.taxBadge}>
+                      <Text style={styles.taxBadgeText}>KDV %{item.taxRate}</Text>
+                    </View>
+                  </View>
+                </View>
+                <Text style={[styles.itemPrice, { color: theme.colors.onSurface }]}>
+                  ₺{(item.price * item.quantity).toFixed(2)}
+                </Text>
+              </View>
+              {index < receipt.items.length - 1 && <Divider style={styles.itemDivider} />}
+            </View>
+          ))}
+          <View style={styles.totalContainer}>
+            <View style={styles.totalSummary}>
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>Ara Toplam</Text>
+                <Text style={[styles.totalAmount, { color: theme.colors.onSurface }]}>
+                  ₺{receipt.totals.subtotal.toFixed(2)}
+                </Text>
+              </View>
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>KDV</Text>
+                <Text style={[styles.totalAmount, { color: theme.colors.onSurface }]}>
+                  ₺{receipt.totals.kdv.toFixed(2)}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.grandTotalContainer}>
+              <View style={styles.paymentBadgeContainer}>
+                {receipt.payment.type === 'card' ? (
+                  <View style={styles.cardPaymentInfo}>
+                    <View style={styles.bankBadge}>
+                      <IconButton
+                        icon="credit-card"
+                        size={20}
+                        iconColor="white"
+                        style={styles.paymentIcon}
+                      />
+                      <Text style={styles.bankName}>{receipt.payment.bank}</Text>
+                    </View>
+                    {receipt.payment.cardInfo?.installment && (
+                      <View style={styles.installmentBadge}>
+                        <Text style={styles.installmentText}>
+                          {receipt.payment.cardInfo.installment} Taksit
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                ) : (
+                  <View style={styles.cashBadge}>
+                    <IconButton
+                      icon="cash"
+                      size={20}
+                      iconColor="white"
+                      style={styles.paymentIcon}
+                    />
+                    <Text style={styles.cashText}>Nakit Ödeme</Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.grandTotalBox}>
+                <Text style={styles.grandTotalLabel}>Toplam Tutar</Text>
+                <Text style={styles.grandTotalAmount}>
+                  ₺{receipt.totals.total.toFixed(2)}
                 </Text>
               </View>
             </View>
           </View>
         </Surface>
-      </View>
 
-      <Surface style={[styles.section, { backgroundColor: theme.colors.surface }]} elevation={1}>
-        <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.primary }]}>
-          Fiş Detayları
-        </Text>
-        <View style={styles.detailGrid}>
-          <View style={styles.detailGridItem}>
-            <Text style={styles.label}>Fiş No</Text>
-            <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.faturaNo}</Text>
-          </View>
-          <View style={styles.detailGridItem}>
-            <Text style={styles.label}>VDB No</Text>
-            <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.vdbNo}</Text>
-          </View>
-          <View style={styles.detailGridItem}>
-            <Text style={styles.label}>ETTN</Text>
-            <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.ettn}</Text>
-          </View>
-          <View style={styles.detailGridItem}>
-            <Text style={styles.label}>Fiş Türü</Text>
-            <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.receiptType}</Text>
-          </View>
-          {receipt.customer && (
-            <>
-              <View style={styles.detailGridItem}>
-                <Text style={styles.label}>Müşteri</Text>
-                <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.customer.name}</Text>
-              </View>
-              <View style={styles.detailGridItem}>
-                <Text style={styles.label}>VKN</Text>
-                <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.customer.vkn}</Text>
-              </View>
-            </>
-          )}
-        </View>
-        <View style={styles.addressContainer}>
-          <Text style={styles.label}>Mağaza Adresi</Text>
-          <Text style={[styles.addressValue, { color: theme.colors.onSurface }]}>{receipt.storeAddress}</Text>
-          {receipt.customer && (
-            <>
-              <Text style={[styles.label, { marginTop: 12 }]}>Müşteri Adresi</Text>
-              <Text style={[styles.addressValue, { color: theme.colors.onSurface }]}>{receipt.customer.address}</Text>
-            </>
-          )}
-        </View>
-      </Surface>
-
-      <Surface style={[styles.section, { backgroundColor: theme.colors.surface }]} elevation={1}>
-        <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.primary }]}>
-          Ürünler
-        </Text>
-        {receipt.items.map((item, index) => (
-          <View key={index} style={styles.itemContainer}>
-            <View style={styles.itemRow}>
-              <View style={styles.itemInfo}>
-                <Text style={[styles.itemName, { color: theme.colors.onSurface }]}>{item.name}</Text>
-                <View style={styles.itemDetails}>
-                  <Text style={styles.itemQuantity}>{item.quantity} adet × ₺{item.price.toFixed(2)}</Text>
-                  <View style={styles.taxBadge}>
-                    <Text style={styles.taxBadgeText}>KDV %{item.taxRate}</Text>
-                  </View>
+        <Surface style={[styles.section, { backgroundColor: theme.colors.surface }]} elevation={1}>
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.primary }]}>
+            Diğer Bilgiler
+          </Text>
+          <View style={styles.detailGrid}>
+            <View style={styles.detailGridItem}>
+              <Text style={styles.label}>Z No</Text>
+              <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.footer.zNo}</Text>
+            </View>
+            <View style={styles.detailGridItem}>
+              <Text style={styles.label}>EKÜ No</Text>
+              <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.footer.ekuNo}</Text>
+            </View>
+            <View style={styles.detailGridItem}>
+              <Text style={styles.label}>POS Bilgisi</Text>
+              <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.footer.posInfo}</Text>
+            </View>
+            <View style={styles.detailGridItem}>
+              <Text style={styles.label}>Mağaza Kodu</Text>
+              <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.footer.storeCode}</Text>
+            </View>
+            {receipt.payment.type === 'card' && receipt.payment.cardInfo && (
+              <>
+                <View style={styles.detailGridItem}>
+                  <Text style={styles.label}>Kart No</Text>
+                  <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.payment.cardInfo.number}</Text>
                 </View>
-              </View>
-              <Text style={[styles.itemPrice, { color: theme.colors.onSurface }]}>
-                ₺{(item.price * item.quantity).toFixed(2)}
-              </Text>
-            </View>
-            {index < receipt.items.length - 1 && <Divider style={styles.itemDivider} />}
-          </View>
-        ))}
-        <View style={styles.totalContainer}>
-          <View style={styles.totalSummary}>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Ara Toplam</Text>
-              <Text style={[styles.totalAmount, { color: theme.colors.onSurface }]}>
-                ₺{receipt.totals.subtotal.toFixed(2)}
-              </Text>
-            </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>KDV</Text>
-              <Text style={[styles.totalAmount, { color: theme.colors.onSurface }]}>
-                ₺{receipt.totals.kdv.toFixed(2)}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.grandTotalContainer}>
-            <View style={styles.paymentBadgeContainer}>
-              {receipt.payment.type === 'card' ? (
-                <View style={styles.cardPaymentInfo}>
-                  <View style={styles.bankBadge}>
-                    <IconButton
-                      icon="credit-card"
-                      size={20}
-                      iconColor="white"
-                      style={styles.paymentIcon}
-                    />
-                    <Text style={styles.bankName}>{receipt.payment.bank}</Text>
-                  </View>
-                  {receipt.payment.cardInfo?.installment && (
-                    <View style={styles.installmentBadge}>
-                      <Text style={styles.installmentText}>
-                        {receipt.payment.cardInfo.installment} Taksit
-                      </Text>
-                    </View>
-                  )}
+                <View style={styles.detailGridItem}>
+                  <Text style={styles.label}>Taksit</Text>
+                  <Text style={[styles.value, { color: theme.colors.onSurface }]}>
+                    {receipt.payment.cardInfo.installment} x {receipt.payment.cardInfo.installmentAmount} TL
+                  </Text>
                 </View>
-              ) : (
-                <View style={styles.cashBadge}>
-                  <IconButton
-                    icon="cash"
-                    size={20}
-                    iconColor="white"
-                    style={styles.paymentIcon}
-                  />
-                  <Text style={styles.cashText}>Nakit Ödeme</Text>
+                <View style={styles.detailGridItem}>
+                  <Text style={styles.label}>Onay Kodu</Text>
+                  <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.payment.cardInfo.approvalCode}</Text>
                 </View>
-              )}
+                <View style={styles.detailGridItem}>
+                  <Text style={styles.label}>Ref No</Text>
+                  <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.payment.cardInfo.refNo}</Text>
+                </View>
+                <View style={styles.detailGridItem}>
+                  <Text style={styles.label}>Provizyon No</Text>
+                  <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.payment.cardInfo.provisionNo}</Text>
+                </View>
+                <View style={styles.detailGridItem}>
+                  <Text style={styles.label}>Batch No</Text>
+                  <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.payment.cardInfo.batchNo}</Text>
+                </View>
+                <View style={styles.detailGridItem}>
+                  <Text style={styles.label}>Terminal ID</Text>
+                  <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.payment.cardInfo.terminalId}</Text>
+                </View>
+              </>
+            )}
+          </View>
+          <View style={styles.barcodeContainer}>
+            <Text style={styles.barcodeLabel}>Barkod</Text>
+            <View style={styles.barcodeBox}>
+              <IconButton
+                icon="barcode"
+                size={24}
+                iconColor="#666"
+                style={styles.barcodeIcon}
+              />
+              <Text style={styles.barcodeText}>{receipt.footer.barcode}</Text>
             </View>
-
-            <View style={styles.grandTotalBox}>
-              <Text style={styles.grandTotalLabel}>Toplam Tutar</Text>
-              <Text style={styles.grandTotalAmount}>
-                ₺{receipt.totals.total.toFixed(2)}
-              </Text>
-            </View>
           </View>
-        </View>
-      </Surface>
-
-      <Surface style={[styles.section, { backgroundColor: theme.colors.surface }]} elevation={1}>
-        <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.primary }]}>
-          Diğer Bilgiler
-        </Text>
-        <View style={styles.detailGrid}>
-          <View style={styles.detailGridItem}>
-            <Text style={styles.label}>Z No</Text>
-            <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.footer.zNo}</Text>
+          <View style={styles.footerTexts}>
+            <Text style={styles.footerText}>{receipt.footer.irsaliyeText}</Text>
+            <Text style={styles.footerText}>{receipt.footer.signatureText}</Text>
+            <Text style={[styles.footerText, styles.thankYouMessage]}>{receipt.footer.thankYouMessage}</Text>
           </View>
-          <View style={styles.detailGridItem}>
-            <Text style={styles.label}>EKÜ No</Text>
-            <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.footer.ekuNo}</Text>
-          </View>
-          <View style={styles.detailGridItem}>
-            <Text style={styles.label}>POS Bilgisi</Text>
-            <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.footer.posInfo}</Text>
-          </View>
-          <View style={styles.detailGridItem}>
-            <Text style={styles.label}>Mağaza Kodu</Text>
-            <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.footer.storeCode}</Text>
-          </View>
-          {receipt.payment.type === 'card' && receipt.payment.cardInfo && (
-            <>
-              <View style={styles.detailGridItem}>
-                <Text style={styles.label}>Kart No</Text>
-                <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.payment.cardInfo.number}</Text>
-              </View>
-              <View style={styles.detailGridItem}>
-                <Text style={styles.label}>Taksit</Text>
-                <Text style={[styles.value, { color: theme.colors.onSurface }]}>
-                  {receipt.payment.cardInfo.installment} x {receipt.payment.cardInfo.installmentAmount} TL
-                </Text>
-              </View>
-              <View style={styles.detailGridItem}>
-                <Text style={styles.label}>Onay Kodu</Text>
-                <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.payment.cardInfo.approvalCode}</Text>
-              </View>
-              <View style={styles.detailGridItem}>
-                <Text style={styles.label}>Ref No</Text>
-                <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.payment.cardInfo.refNo}</Text>
-              </View>
-              <View style={styles.detailGridItem}>
-                <Text style={styles.label}>Provizyon No</Text>
-                <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.payment.cardInfo.provisionNo}</Text>
-              </View>
-              <View style={styles.detailGridItem}>
-                <Text style={styles.label}>Batch No</Text>
-                <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.payment.cardInfo.batchNo}</Text>
-              </View>
-              <View style={styles.detailGridItem}>
-                <Text style={styles.label}>Terminal ID</Text>
-                <Text style={[styles.value, { color: theme.colors.onSurface }]}>{receipt.payment.cardInfo.terminalId}</Text>
-              </View>
-            </>
-          )}
-        </View>
-        <View style={styles.barcodeContainer}>
-          <Text style={styles.barcodeLabel}>Barkod</Text>
-          <View style={styles.barcodeBox}>
-            <IconButton
-              icon="barcode"
-              size={24}
-              iconColor="#666"
-              style={styles.barcodeIcon}
-            />
-            <Text style={styles.barcodeText}>{receipt.footer.barcode}</Text>
-          </View>
-        </View>
-        <View style={styles.footerTexts}>
-          <Text style={styles.footerText}>{receipt.footer.irsaliyeText}</Text>
-          <Text style={styles.footerText}>{receipt.footer.signatureText}</Text>
-          <Text style={[styles.footerText, styles.thankYouMessage]}>{receipt.footer.thankYouMessage}</Text>
-        </View>
-      </Surface>
-    </ScrollView>
+        </Surface>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -381,6 +334,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  content: {
+    flex: 1,
+  },
+  storeHeader: {
     paddingTop: 16,
     marginBottom: 16,
   },
@@ -505,9 +469,6 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.08)',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
   },
   totalSummary: {
     marginBottom: 16,
@@ -602,6 +563,14 @@ const styles = StyleSheet.create({
     margin: 0,
     padding: 0,
   },
+  deleteButton: {
+    position: 'absolute',
+    right: 8,
+    top: 8,
+    margin: 0,
+    zIndex: 1,
+    elevation: 5,
+  },
   barcodeContainer: {
     marginTop: 16,
     paddingTop: 16,
@@ -654,13 +623,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     marginTop: 8,
-  },
-  deleteButton: {
-    position: 'absolute',
-    right: 8,
-    top: 8,
-    margin: 0,
-    zIndex: 1,
-    elevation: 5,
   },
 }); 

@@ -3,12 +3,12 @@ import { useTheme, Button, Text, IconButton } from 'react-native-paper';
 import { useFocusEffect, router } from 'expo-router';
 import { useCallback, useState, useRef } from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import ReceiptCard from './components/ReceiptCard';
-import EmptyState from './components/EmptyState';
-import ActionButtons from './components/ActionButtons';
-import useReceipts from './hooks/useReceipts';
-import { useAuth } from './contexts/AuthContext';
-import type { Receipt } from '../services/receiptService';
+import ReceiptCard from '../components/ReceiptCard';
+import EmptyState from '../components/EmptyState';
+import ActionButtons from '../components/ActionButtons';
+import useReceipts from '../hooks/useReceipts';
+import { useAuth } from '../contexts/AuthContext';
+import type { Receipt } from '../../services/receiptService';
 
 export default function Home() {
   const theme = useTheme();
@@ -109,14 +109,18 @@ export default function Home() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.header}>
-        <Text variant="headlineSmall" style={styles.title}>Fiş Listesi</Text>
-        <IconButton
-          icon="logout"
-          mode="contained"
-          onPress={handleLogout}
-          style={styles.logoutButton}
-        />
+      <View style={[styles.header]}>
+        <View style={styles.leftContainer} />
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>Fiş Listesi</Text>
+        </View>
+        <View style={styles.rightContainer}>
+          <IconButton
+            icon="logout"
+            size={24}
+            onPress={handleLogout}
+          />
+        </View>
       </View>
 
       <View style={styles.filterContainer}>
@@ -195,19 +199,37 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    height: 65,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingTop: 0,
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: '#f0f0f0',
+    position: 'relative',
+  },
+  leftContainer: {
+    width: 50,
+    alignItems: 'center',
+    position: 'absolute',
+    left: 0,
+    zIndex: 1,
+  },
+  titleContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  rightContainer: {
+    width: 50,
+    position: 'absolute',
+    right: 0,
   },
   title: {
-    fontWeight: 'bold',
-  },
-  logoutButton: {
-    marginLeft: 8,
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   filterContainer: {
     padding: 8,
