@@ -1,120 +1,141 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
-import { Link } from 'expo-router';
+import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { TextInput, Button, Text, useTheme } from 'react-native-paper';
+import { Link, useRouter } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
 import { registerSchema } from '../types/auth';
 
 export default function RegisterScreen() {
   const { register, isLoading } = useAuth();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    name: '',
-    surname: '',
-  });
+  const [name, setName] = useState('');
+  const [surname, setSurname] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const router = useRouter();
+  const theme = useTheme();
 
   const handleRegister = async () => {
     try {
-      console.log('Kayıt işlemi başlatılıyor...');
-      console.log('Form verisi:', formData);
-      
       setError('');
-      console.log('Form validasyonu yapılıyor...');
-      const validatedData = registerSchema.parse(formData);
-      console.log('Form validasyonu başarılı:', validatedData);
-      
-      console.log('Firebase kayıt işlemi başlatılıyor...');
+      const data = { name, surname, email, password };
+      const validatedData = registerSchema.parse(data);
       await register(validatedData);
-      console.log('Kayıt işlemi başarılı!');
+      router.replace('/');
     } catch (err) {
-      console.error('Kayıt hatası:', err);
-      console.error('Hata detayları:', JSON.stringify(err, null, 2));
-      
       if (err instanceof Error) {
         setError(err.message);
-        Alert.alert('Kayıt Hatası', `${err.message}\n\nTeknik detay: ${err.stack}`);
       } else {
-        const message = 'Kayıt olurken bir hata oluştu';
-        setError(message);
-        Alert.alert('Kayıt Hatası', `${message}\n\nTeknik detay: ${JSON.stringify(err)}`);
+        setError('Kayıt olurken bir hata oluştu');
       }
     }
-  };
-
-  const handleChange = (field: string) => (value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.form}>
-          <Text variant="headlineMedium" style={styles.title}>
-            Kayıt Ol
+      <View style={styles.form}>
+        <View style={styles.logoContainer}>
+          <Text style={[styles.logoText, { color: theme.colors.primary }]}>
+            eFişim
           </Text>
-
-          <TextInput
-            mode="outlined"
-            label="Ad"
-            value={formData.name}
-            onChangeText={handleChange('name')}
-            style={styles.input}
-            autoCapitalize="words"
-          />
-
-          <TextInput
-            mode="outlined"
-            label="Soyad"
-            value={formData.surname}
-            onChangeText={handleChange('surname')}
-            style={styles.input}
-            autoCapitalize="words"
-          />
-
-          <TextInput
-            mode="outlined"
-            label="E-posta"
-            value={formData.email}
-            onChangeText={handleChange('email')}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            style={styles.input}
-          />
-
-          <TextInput
-            mode="outlined"
-            label="Şifre"
-            value={formData.password}
-            onChangeText={handleChange('password')}
-            secureTextEntry
-            style={styles.input}
-          />
-
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-
-          <Button
-            mode="contained"
-            onPress={handleRegister}
-            loading={isLoading}
-            disabled={isLoading}
-            style={styles.button}
-          >
-            Kayıt Ol
-          </Button>
-
-          <View style={styles.footer}>
-            <Text>Zaten hesabınız var mı? </Text>
-            <Link href="/(auth)/login" asChild>
-              <Text style={styles.link}>Giriş Yap</Text>
-            </Link>
-          </View>
         </View>
-      </ScrollView>
+
+        <Text variant="headlineMedium" style={[styles.title, { color: theme.colors.primary }]}>
+          Hesap Oluştur
+        </Text>
+        
+        <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
+          Bilgilerinizi girerek kayıt olun
+        </Text>
+
+        <TextInput
+          mode="outlined"
+          label="Ad"
+          value={name}
+          onChangeText={setName}
+          style={styles.input}
+          left={<TextInput.Icon icon="account" color={theme.colors.primary} />}
+          theme={{
+            colors: {
+              primary: theme.colors.primary,
+            },
+          }}
+        />
+
+        <TextInput
+          mode="outlined"
+          label="Soyad"
+          value={surname}
+          onChangeText={setSurname}
+          style={styles.input}
+          left={<TextInput.Icon icon="account" color={theme.colors.primary} />}
+          theme={{
+            colors: {
+              primary: theme.colors.primary,
+            },
+          }}
+        />
+
+        <TextInput
+          mode="outlined"
+          label="E-posta"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          style={styles.input}
+          left={<TextInput.Icon icon="email" color={theme.colors.primary} />}
+          theme={{
+            colors: {
+              primary: theme.colors.primary,
+            },
+          }}
+        />
+
+        <TextInput
+          mode="outlined"
+          label="Şifre"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          style={styles.input}
+          left={<TextInput.Icon icon="lock" color={theme.colors.primary} />}
+          theme={{
+            colors: {
+              primary: theme.colors.primary,
+            },
+          }}
+        />
+
+        {error ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.error}>{error}</Text>
+          </View>
+        ) : null}
+
+        <Button
+          mode="contained"
+          onPress={handleRegister}
+          loading={isLoading}
+          disabled={isLoading}
+          style={styles.button}
+          contentStyle={styles.buttonContent}
+          labelStyle={styles.buttonLabel}
+          buttonColor={theme.colors.primary}
+        >
+          Kayıt Ol
+        </Button>
+
+        <View style={styles.footer}>
+          <Text style={{ color: theme.colors.onSurfaceVariant }}>Zaten hesabınız var mı? </Text>
+          <Link href="/(auth)/login" asChild>
+            <Text style={[styles.link, { color: theme.colors.primary }]}>Giriş Yap</Text>
+          </Link>
+        </View>
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -122,38 +143,63 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  scrollContent: {
-    flexGrow: 1,
   },
   form: {
     flex: 1,
-    padding: 20,
+    padding: 24,
     justifyContent: 'center',
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  logoText: {
+    fontSize: 48,
+    fontWeight: 'bold',
   },
   title: {
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 8,
+    fontWeight: 'bold',
+  },
+  subtitle: {
+    textAlign: 'center',
+    marginBottom: 32,
+    fontSize: 16,
   },
   input: {
-    marginBottom: 12,
+    marginBottom: 16,
+    backgroundColor: 'white',
   },
-  button: {
-    marginTop: 12,
-    padding: 4,
+  errorContainer: {
+    backgroundColor: '#FFE5E5',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
   },
   error: {
-    color: 'red',
-    marginBottom: 12,
+    color: '#D32F2F',
     textAlign: 'center',
+    fontSize: 14,
+  },
+  button: {
+    marginTop: 8,
+    borderRadius: 8,
+  },
+  buttonContent: {
+    height: 48,
+  },
+  buttonLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 24,
+    alignItems: 'center',
   },
   link: {
-    color: '#2196F3',
+    fontWeight: '600',
   },
 }); 

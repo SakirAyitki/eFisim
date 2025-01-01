@@ -185,6 +185,7 @@ export default function TrashScreen() {
   if (loading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
+        <Header title="Çöp Kutusu" />
         <ActivityIndicator size="large" color={theme.colors.primary} />
         <Text variant="bodyMedium" style={[styles.loadingText, { color: theme.colors.onBackground }]}>
           Fişler yükleniyor...
@@ -193,9 +194,11 @@ export default function TrashScreen() {
     );
   }
 
-  if (receipts.length === 0) {
-    return (
-      <View style={[styles.container, styles.centerContent]}>
+  return (
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Header title="Çöp Kutusu" />
+
+      {receipts.length === 0 ? (
         <View style={styles.emptyStateContainer}>
           <IconButton
             icon="delete-outline"
@@ -210,41 +213,35 @@ export default function TrashScreen() {
             Silinen fişleriniz burada görüntülenecektir
           </Text>
         </View>
-      </View>
-    );
-  }
+      ) : (
+        <>
+          <FlatList
+            data={receipts}
+            renderItem={renderItem}
+            keyExtractor={item => item.id!}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+          />
 
-  return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Header title="Çöp Kutusu" />
-
-      <FlatList
-        data={receipts}
-        renderItem={renderItem}
-        keyExtractor={item => item.id!}
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-      />
-
-      {receipts.length > 0 && (
-        <View style={styles.floatingButtonContainer}>
-          <Pressable 
-            style={({pressed}) => [
-              styles.floatingButton,
-              pressed && {opacity: 0.8}
-            ]}
-            onPress={emptyTrash}
-            android_ripple={{ color: theme.colors.error }}
-          >
-            <IconButton
-              icon="delete-sweep"
-              size={22}
-              iconColor={theme.colors.surface}
-              style={{ margin: 0, padding: 0 }}
-            />
-            <Text style={styles.floatingButtonText}>Çöp Kutusunu Boşalt</Text>
-          </Pressable>
-        </View>
+          <View style={styles.floatingButtonContainer}>
+            <Pressable 
+              style={({pressed}) => [
+                styles.floatingButton,
+                pressed && {opacity: 0.8}
+              ]}
+              onPress={emptyTrash}
+              android_ripple={{ color: theme.colors.error }}
+            >
+              <IconButton
+                icon="delete-sweep"
+                size={22}
+                iconColor={theme.colors.surface}
+                style={{ margin: 0, padding: 0 }}
+              />
+              <Text style={styles.floatingButtonText}>Çöp Kutusunu Boşalt</Text>
+            </Pressable>
+          </View>
+        </>
       )}
     </View>
   );
@@ -254,6 +251,7 @@ const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+
   },
   centerContent: {
     flex: 1,
@@ -478,4 +476,4 @@ const getStyles = (theme: any) => StyleSheet.create({
     letterSpacing: 0.1,
     fontWeight: '500',
   },
-});
+});});

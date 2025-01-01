@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import { TextInput, Button, Text, useTheme } from 'react-native-paper';
 import { Link, useRouter } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
 import { loginSchema } from '../types/auth';
@@ -11,6 +11,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const theme = useTheme();
 
   const handleLogin = async () => {
     try {
@@ -18,7 +19,6 @@ export default function LoginScreen() {
       const data = { email, password };
       const validatedData = loginSchema.parse(data);
       await login(validatedData);
-      // Login başarılı olduğunda ana sayfaya yönlendir
       router.replace('/');
     } catch (err) {
       if (err instanceof Error) {
@@ -32,11 +32,21 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <View style={styles.form}>
-        <Text variant="headlineMedium" style={styles.title}>
-          Giriş Yap
+        <View style={styles.logoContainer}>
+          <Text style={[styles.logoText, { color: theme.colors.primary }]}>
+            eFişim
+          </Text>
+        </View>
+
+        <Text variant="headlineMedium" style={[styles.title, { color: theme.colors.primary }]}>
+          Hoş Geldiniz
+        </Text>
+        
+        <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
+          Devam etmek için giriş yapın
         </Text>
 
         <TextInput
@@ -47,6 +57,12 @@ export default function LoginScreen() {
           autoCapitalize="none"
           keyboardType="email-address"
           style={styles.input}
+          left={<TextInput.Icon icon="email" color={theme.colors.primary} />}
+          theme={{
+            colors: {
+              primary: theme.colors.primary,
+            },
+          }}
         />
 
         <TextInput
@@ -56,9 +72,19 @@ export default function LoginScreen() {
           onChangeText={setPassword}
           secureTextEntry
           style={styles.input}
+          left={<TextInput.Icon icon="lock" color={theme.colors.primary} />}
+          theme={{
+            colors: {
+              primary: theme.colors.primary,
+            },
+          }}
         />
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {error ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.error}>{error}</Text>
+          </View>
+        ) : null}
 
         <Button
           mode="contained"
@@ -66,14 +92,17 @@ export default function LoginScreen() {
           loading={isLoading}
           disabled={isLoading}
           style={styles.button}
+          contentStyle={styles.buttonContent}
+          labelStyle={styles.buttonLabel}
+          buttonColor={theme.colors.primary}
         >
           Giriş Yap
         </Button>
 
         <View style={styles.footer}>
-          <Text>Hesabınız yok mu? </Text>
+          <Text style={{ color: theme.colors.onSurfaceVariant }}>Hesabınız yok mu? </Text>
           <Link href="/(auth)/register" asChild>
-            <Text style={styles.link}>Kayıt Ol</Text>
+            <Text style={[styles.link, { color: theme.colors.primary }]}>Kayıt Ol</Text>
           </Link>
         </View>
       </View>
@@ -84,35 +113,63 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   form: {
     flex: 1,
-    padding: 20,
+    padding: 24,
     justifyContent: 'center',
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  logoText: {
+    fontSize: 48,
+    fontWeight: 'bold',
   },
   title: {
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 8,
+    fontWeight: 'bold',
+  },
+  subtitle: {
+    textAlign: 'center',
+    marginBottom: 32,
+    fontSize: 16,
   },
   input: {
-    marginBottom: 12,
+    marginBottom: 16,
+    backgroundColor: 'white',
   },
-  button: {
-    marginTop: 12,
-    padding: 4,
+  errorContainer: {
+    backgroundColor: '#FFE5E5',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
   },
   error: {
-    color: 'red',
-    marginBottom: 12,
+    color: '#D32F2F',
     textAlign: 'center',
+    fontSize: 14,
+  },
+  button: {
+    marginTop: 8,
+    borderRadius: 8,
+  },
+  buttonContent: {
+    height: 48,
+  },
+  buttonLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 24,
+    alignItems: 'center',
   },
   link: {
-    color: '#2196F3',
+    fontWeight: '600',
   },
 }); 

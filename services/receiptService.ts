@@ -79,8 +79,26 @@ class ReceiptService {
       const user = auth.currentUser;
       if (!user) throw new Error('Kullanıcı girişi yapılmamış');
 
-      const docRef = await addDoc(collection(db, this.collection), {
+      const cleanedReceipt = {
         ...receipt,
+        payment: {
+          ...receipt.payment,
+          bank: receipt.payment.type === 'card' ? (receipt.payment.bank || '') : null,
+          cardInfo: receipt.payment.type === 'card' ? (receipt.payment.cardInfo || {
+            number: '',
+            installment: '',
+            installmentAmount: '',
+            approvalCode: '',
+            refNo: '',
+            provisionNo: '',
+            batchNo: '',
+            terminalId: ''
+          }) : null
+        }
+      };
+
+      const docRef = await addDoc(collection(db, this.collection), {
+        ...cleanedReceipt,
         userId: user.uid,
         isDeleted: false,
         deletedAt: null,
