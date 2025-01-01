@@ -476,4 +476,4 @@ const getStyles = (theme: any) => StyleSheet.create({
     letterSpacing: 0.1,
     fontWeight: '500',
   },
-});});
+});
