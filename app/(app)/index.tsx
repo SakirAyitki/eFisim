@@ -57,11 +57,39 @@ export default function Home() {
   );
 
   const parseReceiptDate = (dateStr: string) => {
-    const [day, month, year] = dateStr.split('.').map(Number);
-    return new Date(year, month - 1, day);
+    try {
+      // Tarih formatını kontrol et (GG.AA.YYYY)
+      if (!/^\d{2}\.\d{2}\.\d{4}$/.test(dateStr)) {
+        console.error('Geçersiz tarih formatı:', dateStr);
+        return null;
+      }
+
+      const [day, month, year] = dateStr.split('.').map(Number);
+      
+      // Geçerli tarih değerlerini kontrol et
+      if (month < 1 || month > 12 || day < 1 || day > 31 || year < 2000) {
+        console.error('Geçersiz tarih değerleri:', { day, month, year });
+        return null;
+      }
+
+      const date = new Date(year, month - 1, day);
+      
+      // Oluşturulan tarihin geçerli olup olmadığını kontrol et
+      if (isNaN(date.getTime())) {
+        console.error('Geçersiz tarih oluşturuldu:', date);
+        return null;
+      }
+
+      return date;
+    } catch (error) {
+      console.error('Tarih ayrıştırma hatası:', error);
+      return null;
+    }
   };
 
-  const isSameDay = (date1: Date, date2: Date) => {
+  const isSameDay = (date1: Date | null, date2: Date | null) => {
+    if (!date1 || !date2) return false;
+    
     return (
       date1.getFullYear() === date2.getFullYear() &&
       date1.getMonth() === date2.getMonth() &&
@@ -81,13 +109,8 @@ export default function Home() {
 
     // Tarih filtresi
     if (shouldShow && selectedDate && receipt.date) {
-      try {
-        const receiptDate = parseReceiptDate(receipt.date);
-        shouldShow = isSameDay(receiptDate, selectedDate);
-      } catch (error) {
-        console.error('Tarih parse hatası:', error);
-        shouldShow = false;
-      }
+      const receiptDate = parseReceiptDate(receipt.date);
+      shouldShow = isSameDay(receiptDate, selectedDate);
     }
 
     return shouldShow;
