@@ -113,45 +113,46 @@ class ReceiptService {
     }
   }
 
-  async getUserReceipts(includeDeleted = false): Promise<Receipt[]> {
+  async getUserReceipts(): Promise<Receipt[]> {
     try {
       const user = auth.currentUser;
-      if (!user) throw new Error('Kullanıcı girişi yapılmamış');
+      if (!user) {
+        throw new Error('Kullanıcı girişi yapılmamış');
+      }
 
-      console.log('Sorgu yapılıyor:', includeDeleted ? 'Silinen fişler' : 'Aktif fişler');
-
-      // Temel sorgu
-      const baseQuery = query(
-        collection(db, this.collection),
+      const receiptsRef = collection(db, 'receipts');
+      const q = query(
+        receiptsRef,
         where('userId', '==', user.uid)
       );
 
-      const querySnapshot = await getDocs(baseQuery);
-      const receipts = querySnapshot.docs.map(doc => {
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => {
         const data = doc.data();
         return {
           id: doc.id,
-          ...data,
-          createdAt: data.createdAt?.toDate(),
-          deletedAt: data.deletedAt?.toDate(),
-          isDeleted: !!data.isDeleted // Boolean'a çevir
+          userId: data.userId,
+          storeName: data.storeName,
+          storeAddress: data.storeAddress,
+          vdbNo: data.vdbNo,
+          receiptType: data.receiptType,
+          receiptNo: data.receiptNo,
+          date: data.date,
+          time: data.time,
+          ettn: data.ettn,
+          faturaNo: data.faturaNo,
+          customer: data.customer,
+          items: data.items,
+          payment: data.payment,
+          totals: data.totals,
+          footer: data.footer,
+          createdAt: data.createdAt?.toDate?.() || new Date(),
+          updatedAt: data.updatedAt?.toDate?.() || new Date()
         } as Receipt;
       });
-
-      // Bellek üzerinde filtreleme yap
-      const filteredReceipts = includeDeleted 
-        ? receipts.filter(r => r.isDeleted === true)  // Sadece silinen fişleri getir
-        : receipts.filter(r => r.isDeleted !== true); // Sadece silinmeyen fişleri getir
-
-      console.log('Tüm fiş sayısı:', receipts.length);
-      console.log('Filtrelenmiş fiş sayısı:', filteredReceipts.length);
-      console.log('Silinen fiş sayısı:', receipts.filter(r => r.isDeleted).length);
-      console.log('Aktif fiş sayısı:', receipts.filter(r => !r.isDeleted).length);
-
-      return filteredReceipts;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Fişler alınırken hata:', error);
-      throw new Error('Fişler alınırken hata: ' + error.message);
+      throw new Error(`Fişler alınırken hata: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`);
     }
   }
 

@@ -6,6 +6,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../src/config/firebase';
 import type { Receipt } from '../../../services/receiptService';
 import receiptService from '../../../services/receiptService';
+import { PdfService } from '../../../services/pdfService';
 
 export default function ReceiptDetail() {
   const { id } = useLocalSearchParams();
@@ -67,6 +68,16 @@ export default function ReceiptDetail() {
     );
   };
 
+  const handleShare = async () => {
+    try {
+      if (!receipt) return;
+      await PdfService.generateAndSharePdf(receipt);
+    } catch (error) {
+      console.error('Fiş paylaşılırken hata:', error);
+      Alert.alert('Hata', 'Fiş paylaşılırken bir hata oluştu.');
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -91,7 +102,13 @@ export default function ReceiptDetail() {
           onPress={() => router.back()}
         />
         <Text variant="titleLarge">Fiş Detayı</Text>
-        <View style={{ width: 48 }} />
+        <View style={styles.headerActions}>
+          <IconButton
+            icon="share-variant"
+            onPress={handleShare}
+          />
+          
+        </View>
       </View>
 
       <ScrollView style={[styles.content, { backgroundColor: theme.colors.background }]}>
@@ -623,5 +640,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     marginTop: 8,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 }); 

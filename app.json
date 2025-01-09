@@ -17,7 +17,9 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "Bu uygulama QR kodları taramak için kameraya erişim gerektirir."
+        "NSCameraUsageDescription": "Bu uygulama QR kodları taramak için kameraya erişim gerektirir.",
+        "NSPhotoLibraryAddUsageDescription": "Bu uygulama fişleri PDF olarak kaydetmek için fotoğraf kitaplığına erişim gerektirir.",
+        "NSPhotoLibraryUsageDescription": "Bu uygulama fişleri PDF olarak kaydetmek için fotoğraf kitaplığına erişim gerektirir."
       }
     },
     "android": {
@@ -30,7 +32,9 @@
       "permissions": [
         "CAMERA",
         "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_EXTERNAL_STORAGE"
       ]
     },
     "web": {
