@@ -274,11 +274,15 @@ export class PdfService {
     try {
       const html = this.generateHtml(receipt);
       
+      const formattedDate = receipt.date.replace(/\./g, '');
+      
+      const fileName = `${receipt.faturaNo}_${formattedDate}.pdf`;
+      
       const { uri } = await Print.printToFileAsync({
         html,
         base64: false,
-        width: 595.28, // A4 genişlik (72 dpi)
-        height: 841.89, // A4 yükseklik (72 dpi)
+        width: 595.28,
+        height: 841.89,
         margins: {
           left: 20,
           top: 20,
@@ -287,18 +291,24 @@ export class PdfService {
         }
       });
 
+      const newUri = `${FileSystem.cacheDirectory}${fileName}`;
+      await FileSystem.copyAsync({
+        from: uri,
+        to: newUri
+      });
+
+      await FileSystem.deleteAsync(uri, { idempotent: true });
+
       const isAvailable = await Sharing.isAvailableAsync();
       if (!isAvailable) {
         throw new Error('Paylaşım özelliği kullanılamıyor');
       }
 
-      await Sharing.shareAsync(uri, {
+      await Sharing.shareAsync(newUri, {
         mimeType: 'application/pdf',
-        dialogTitle: `${receipt.storeName} - Fiş`,
+        dialogTitle: `${receipt.storeName} - ${fileName}`,
         UTI: 'com.adobe.pdf'
       });
-
-      await FileSystem.deleteAsync(uri, { idempotent: true });
 
     } catch (error) {
       console.error('PDF oluşturma hatası:', error);
