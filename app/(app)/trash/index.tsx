@@ -42,7 +42,7 @@ export default function TrashScreen() {
             style: "cancel"
           },
           {
-            text: "Geri Yükl",
+            text: "Geri Yükle",
             onPress: async () => {
               await ReceiptService.restoreReceipt(id);
               await loadDeletedReceipts(); // Listeyi yenile
